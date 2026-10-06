@@ -30,7 +30,7 @@ final class ExchangeGui {
 
     void open(Player player) {
         ExchangeHolder holder = new ExchangeHolder();
-        Inventory inventory = plugin.getServer().createInventory(holder, SIZE, Text.of("&8[&6spaメダル両替所&8]"));
+        Inventory inventory = plugin.getServer().createInventory(holder, SIZE, Text.of("&8[&6スパメダル両替所&8]"));
         holder.setInventory(inventory);
         render(player, holder);
         player.openInventory(inventory);
@@ -44,11 +44,11 @@ final class ExchangeGui {
         MedalConfig config = exchange.config();
         double balance = plugin.economy().wallet(player).balance();
 
-        inventory.setItem(INFO_SLOT, button(Material.SUNFLOWER, 1, "&6spaメダル両替所", List.of(
+        inventory.setItem(INFO_SLOT, button(Material.SUNFLOWER, 1, "&6スパメダル両替所", List.of(
                 "&7所持金: &f" + config.formatMoney(balance),
                 "",
-                "&7買うとき: 1spaメダル = " + config.formatMoney(config.buyPrice(MedalType.ONE, 1)),
-                "&7戻すとき: 1spaメダル = " + config.formatMoney(config.redeemPrice(MedalType.ONE, 1)),
+                "&7買うとき: 1スパメダル = " + config.formatMoney(config.buyPrice(MedalType.ONE, 1)),
+                "&7戻すとき: 1スパメダル = " + config.formatMoney(config.redeemPrice(MedalType.ONE, 1)),
                 "&c戻すときは" + config.redeemDiscount() + "になります。",
                 "&7崩す・束ねるは手数料なし")));
 

@@ -39,7 +39,7 @@ final class MedalCommand implements CommandExecutor, TabCompleter {
                 MedalLedger ledger = plugin.ledger();
                 MedalConfig config = plugin.exchange().config();
                 long outstanding = ledger.outstanding();
-                sender.sendMessage(Text.prefixed("&6spaメダルの発行状況（1spaメダル換算）"));
+                sender.sendMessage(Text.prefixed("&6スパメダルの発行状況（1スパメダル換算）"));
                 sender.sendMessage(Text.of("&7発行（累計）: &f" + ledger.issued() + "枚"));
                 sender.sendMessage(Text.of("&7回収（累計）: &f" + ledger.redeemed() + "枚"));
                 sender.sendMessage(Text.of("&7出回っている枚数: &f" + outstanding + "枚 &7（全部戻ると "

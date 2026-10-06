@@ -101,16 +101,16 @@ public final class MedalProbe extends JavaPlugin {
         Object config = call(exchange, "config");
 
         // 価格
-        check((double) call(config, "buyPrice", one, 1) == 2.5, "1spaメダルは2.5S");
-        check((double) call(config, "redeemPrice", one, 1) == 2.0, "1spaメダルは戻すと2.0S");
-        check((double) call(config, "buyPrice", hundred, 1) == 250.0, "100spaメダルは250S");
-        check((double) call(config, "redeemPrice", hundred, 1) == 200.0, "100spaメダルは戻すと200S");
-        check((double) call(config, "redeemPrice", ten, 3) == 60.0, "10spaメダル3枚は戻すと60S");
+        check((double) call(config, "buyPrice", one, 1) == 2.5, "1スパメダルは2.5S");
+        check((double) call(config, "redeemPrice", one, 1) == 2.0, "1スパメダルは戻すと2.0S");
+        check((double) call(config, "buyPrice", hundred, 1) == 250.0, "100スパメダルは250S");
+        check((double) call(config, "redeemPrice", hundred, 1) == 200.0, "100スパメダルは戻すと200S");
+        check((double) call(config, "redeemPrice", ten, 3) == 60.0, "10スパメダル3枚は戻すと60S");
 
         // 本物と偽物
         ItemStack real = (ItemStack) call(items, "create", ten, 1);
         check(real.getType() == Material.NAUTILUS_SHELL, "素材はオウムガイの殻");
-        check(call(items, "typeOf", real) == ten, "本物の10spaメダルを見分ける");
+        check(call(items, "typeOf", real) == ten, "本物の10スパメダルを見分ける");
         ItemStack fake = new ItemStack(Material.NAUTILUS_SHELL);
         ItemMeta fakeMeta = fake.getItemMeta();
         fakeMeta.displayName(real.getItemMeta().displayName());
@@ -126,10 +126,10 @@ public final class MedalProbe extends JavaPlugin {
 
         // 買う
         balance[0] = 100;
-        check(ok(call(exchange, "buy", inventory, wallet, id, "Probe", one, 10)), "1spaメダルを10枚買える");
+        check(ok(call(exchange, "buy", inventory, wallet, id, "Probe", one, 10)), "1スパメダルを10枚買える");
         check(balance[0] == 75, "25S引かれる");
         check((int) call(exchange, "count", inventory, one) == 10, "10枚持っている");
-        check(!ok(call(exchange, "buy", inventory, wallet, id, "Probe", hundred, 1)), "残高不足では100spaメダルを買えない");
+        check(!ok(call(exchange, "buy", inventory, wallet, id, "Probe", hundred, 1)), "残高不足では100スパメダルを買えない");
         check(balance[0] == 75 && (int) call(exchange, "count", inventory, hundred) == 0, "失敗しても何も動かない");
 
         // 戻す
@@ -143,22 +143,22 @@ public final class MedalProbe extends JavaPlugin {
 
         // 崩す・束ねる
         balance[0] = 1000;
-        check(ok(call(exchange, "buy", inventory, wallet, id, "Probe", hundred, 1)), "100spaメダルを買える");
+        check(ok(call(exchange, "buy", inventory, wallet, id, "Probe", hundred, 1)), "100スパメダルを買える");
         check(ok(call(exchange, "split", inventory, id, "Probe", hundred)), "100を10×10に崩せる");
         check((int) call(exchange, "count", inventory, hundred) == 0
-                && (int) call(exchange, "count", inventory, ten) == 10, "10spaメダルが10枚になる");
+                && (int) call(exchange, "count", inventory, ten) == 10, "10スパメダルが10枚になる");
         check(ok(call(exchange, "split", inventory, id, "Probe", ten)), "10を1×10に崩せる");
-        check((int) call(exchange, "count", inventory, one) == 15, "1spaメダルが15枚になる");
+        check((int) call(exchange, "count", inventory, one) == 15, "1スパメダルが15枚になる");
         check(ok(call(exchange, "merge", inventory, id, "Probe", ten)), "1×10を10に束ねられる");
         check((int) call(exchange, "count", inventory, one) == 5
                 && (int) call(exchange, "count", inventory, ten) == 10, "束ねたあとの枚数");
-        check(!ok(call(exchange, "merge", inventory, id, "Probe", ten)), "1spaメダルが10枚ないと束ねられない");
+        check(!ok(call(exchange, "merge", inventory, id, "Probe", ten)), "1スパメダルが10枚ないと束ねられない");
         check(ok(call(exchange, "merge", inventory, id, "Probe", hundred)), "10×10を100に束ねられる");
         check(balance[0] == 750, "崩す・束ねるでお金は動かない");
 
         // 全部戻す
-        check(ok(call(exchange, "redeem", inventory, wallet, id, "Probe", hundred, null)), "100spaメダルを全部戻せる");
-        check(balance[0] == 950, "100spaメダル1枚で200S戻る");
+        check(ok(call(exchange, "redeem", inventory, wallet, id, "Probe", hundred, null)), "100スパメダルを全部戻せる");
+        check(balance[0] == 950, "100スパメダル1枚で200S戻る");
 
         // 持ち物がいっぱい
         Inventory full = Bukkit.createInventory(null, 36);
@@ -167,14 +167,14 @@ public final class MedalProbe extends JavaPlugin {
         }
         check(!ok(call(exchange, "buy", full, wallet, id, "Probe", one, 1)), "持ち物がいっぱいなら買えない");
         check(balance[0] == 950, "いっぱいで断ったときはお金を引かない");
-        // 2枚の山から1枚崩しても枠は空かないので、10spaメダル10枚の行き場がない。
+        // 2枚の山から1枚崩しても枠は空かないので、10スパメダル10枚の行き場がない。
         full.setItem(0, (ItemStack) call(items, "create", hundred, 2));
         check(!ok(call(exchange, "split", full, id, "Probe", hundred)), "崩した先が入らなければ崩さない");
         check((int) call(exchange, "count", full, hundred) == 2, "崩せなかったメダルは残る");
         full.setItem(0, (ItemStack) call(items, "create", hundred, 1));
         check(ok(call(exchange, "split", full, id, "Probe", hundred)), "最後の1枚なら空いた枠に崩せる");
 
-        // 記録（1spaメダル換算）: 発行 10 + 100、回収 5 + 100
+        // 記録（1スパメダル換算）: 発行 10 + 100、回収 5 + 100
         check((long) call(ledger, "issued") - issued0 == 110, "発行の累計が110枚ぶん増える");
         check((long) call(ledger, "redeemed") - redeemed0 == 105, "回収の累計が105枚ぶん増える");
 

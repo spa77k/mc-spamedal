@@ -35,7 +35,7 @@ final class MedalItems {
         ItemMeta meta = stack.getItemMeta();
         meta.displayName(Text.item(type.displayName()));
         meta.lore(List.of(
-                Text.item("&7物理版spaコイン"),
+                Text.item("&7物理版スパコイン"),
                 Text.item("&8ロビーの両替所でスパコインと交換できる")));
         meta.setItemModel(new NamespacedKey("spamedal", type.modelId()));
         meta.addEnchant(Enchantment.UNBREAKING, 1, true);

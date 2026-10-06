@@ -1,6 +1,6 @@
 package dev.spa.spamedal;
 
-/** メダルの額面。値は1spaメダル何枚ぶんかを表す。 */
+/** メダルの額面。値は1スパメダル何枚ぶんかを表す。 */
 enum MedalType {
     ONE(1, "medal_1", "&6"),
     TEN(10, "medal_10", "&f"),
@@ -26,7 +26,7 @@ enum MedalType {
     }
 
     String displayName() {
-        return color + value + "spaメダル";
+        return color + value + "スパメダル";
     }
 
     /** 10枚で1枚になる、ひとつ上の額面。いちばん上なら null。 */

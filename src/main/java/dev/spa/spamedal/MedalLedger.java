@@ -19,7 +19,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * 発行と回収の記録。
  *
  * 1件ずつの取引は medals.log に1行1件のJSON（JSON Lines）で追記する。
- * 累計は stats.yml に1spaメダル換算の枚数で持ち、「発行 − 回収 = 出回っている枚数」を出す。
+ * 累計は stats.yml に1スパメダル換算の枚数で持ち、「発行 − 回収 = 出回っている枚数」を出す。
  * 出回っている枚数より多くのメダルが戻ってきたら、どこかで増殖している合図になる。
  */
 final class MedalLedger {
@@ -56,7 +56,7 @@ final class MedalLedger {
         return redeemed;
     }
 
-    /** 出回っている枚数（1spaメダル換算）。 */
+    /** 出回っている枚数（1スパメダル換算）。 */
     long outstanding() {
         return issued - redeemed;
     }
@@ -72,7 +72,7 @@ final class MedalLedger {
         saveStats();
         log("redeem", uuid, name, type, count, money);
         if (outstanding() < 0) {
-            plugin.getLogger().warning("発行した枚数より多くのspaメダルが戻ってきました。増殖の疑いがあります: "
+            plugin.getLogger().warning("発行した枚数より多くのスパメダルが戻ってきました。増殖の疑いがあります: "
                     + "発行 " + issued + "、回収 " + redeemed + "（最後に戻した人: " + name + "）");
         }
     }

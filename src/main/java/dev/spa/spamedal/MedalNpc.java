@@ -41,7 +41,7 @@ final class MedalNpc implements Listener {
         location.setYaw(at.getYaw());
         Villager villager = at.getWorld().spawn(location, Villager.class, spawned -> {
             spawned.addScoreboardTag(TAG);
-            spawned.customName(Text.of("&6spaメダル両替所"));
+            spawned.customName(Text.of("&6スパメダル両替所"));
             spawned.setCustomNameVisible(true);
             spawned.setAI(false);
             spawned.setInvulnerable(true);

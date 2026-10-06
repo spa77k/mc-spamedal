@@ -3,12 +3,12 @@ version: '${project.version}'
 main: dev.spa.spamedal.SpaMedalPlugin
 api-version: "1.21"
 author: spa
-description: スパコインと交換できる物理通貨「spaメダル」と両替所
+description: スパコインと交換できる物理通貨「スパメダル」と両替所
 depend: [Vault]
 
 commands:
   medal:
-    description: spaメダルの発行状況と設定の再読み込み
+    description: スパメダルの発行状況と設定の再読み込み
     usage: /medal <stats|reload>
   medalnpc:
     description: 両替所の村人を置く・取り除く

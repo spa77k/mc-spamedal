@@ -3,7 +3,7 @@ package dev.spa.spamedal;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
-/** スパコインと交換できる物理通貨「spaメダル」と、その両替所。 */
+/** スパコインと交換できる物理通貨「スパメダル」と、その両替所。 */
 public final class SpaMedalPlugin extends JavaPlugin {
 
     private MedalItems medalItems;
@@ -42,7 +42,7 @@ public final class SpaMedalPlugin extends JavaPlugin {
             registered.setExecutor(command);
             registered.setTabCompleter(command);
         }
-        getLogger().info("発行 " + ledger.issued() + " 枚、回収 " + ledger.redeemed() + " 枚（1spaメダル換算）を読み込みました。");
+        getLogger().info("発行 " + ledger.issued() + " 枚、回収 " + ledger.redeemed() + " 枚（1スパメダル換算）を読み込みました。");
     }
 
     void reloadMedalConfig() {
