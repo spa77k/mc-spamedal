@@ -1,0 +1,14 @@
+# spaメダルの設定。
+#
+# 1spaメダルを買うときの値段（スパコイン）。10・100spaメダルはこの10倍・100倍。
+unit-price: 2.5
+
+# メダルをスパコインへ戻すときの倍率。0.8なら1spaメダルが2.0Sで戻る。
+# 崩す・束ねる（1⇔10⇔100）には掛からない。
+redeem-rate: 0.8
+
+# 金額表示。EssentialsX の currency-symbol と揃えておく。
+currency:
+  symbol: "S"
+  # true なら 250S、false なら S250 と表示する。
+  suffix: true
