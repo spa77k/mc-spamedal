@@ -12,3 +12,30 @@ currency:
   symbol: "S"
   # true なら 250S、false なら S250 と表示する。
   suffix: true
+
+# スパくじ（宝くじ）。両替所の最下段で、スパメダルで買う。
+lottery:
+  # 1枚の値段（スパメダル）。
+  ticket-price: 10
+  # 売上のうち賞金プールに積む割合。残りは消え、スパコインに戻らなくなる。0〜1。
+  pool-rate: 0.5
+  # 等級。上から順に、売れた券の中から当選番号を選ぶ。
+  # share はプールのうち、その等級の当選者全員に配る割合（合計1以下）。winners 人で山分けする。
+  # 配りきれなかったぶん（端数や、売れた券が当選本数より少ないとき）は次の回へ持ち越す。
+  prizes:
+    - name: 1等
+      winners: 1
+      share: 0.6
+    - name: 2等
+      winners: 3
+      share: 0.25
+    - name: 3等
+      winners: 10
+      share: 0.15
+  # 抽選日時。day は MONDAY〜SUNDAY。券が1枚も売れていない回は抽選せず、次の日時へ延ばす。
+  draw:
+    day: SUNDAY
+    time: "21:00"
+    zone: Asia/Tokyo
+  # 当選金を換金できる期間。抽選からこの回数ぶん次の抽選が行われると、換金されていない当選金は消える。
+  claim-draws: 4

@@ -13,6 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
  * 両替所の画面を組み立てる。統合版から見ても崩れないよう、チェスト型の枠とバニラのアイテムだけを使う。
  *
  * 1〜3段目が額面ごとの売買（左から、メダル・買う1/10/64枚・戻す1/10/全部）、5段目が崩す・束ねる。
+ * 最下段の左側がスパくじ（案内・1枚買う・10枚買う・当たりを確かめる）。
  */
 final class ExchangeGui {
 
@@ -21,6 +22,9 @@ final class ExchangeGui {
     private static final int CLOSE_SLOT = 49;
     private static final int[] BUY_COUNTS = {1, 10, 64};
     private static final int[] REDEEM_COUNTS = {1, 10};
+    private static final int LOTTERY_INFO_SLOT = 45;
+    private static final int[] LOTTERY_COUNTS = {1, 10};
+    private static final int LOTTERY_CLAIM_SLOT = 48;
 
     private final SpaMedalPlugin plugin;
 
@@ -97,9 +101,45 @@ final class ExchangeGui {
         exchangeButton(holder, 38, ExchangeHolder.Kind.MERGE, MedalType.HUNDRED);
         exchangeButton(holder, 42, ExchangeHolder.Kind.SPLIT, MedalType.TEN);
         exchangeButton(holder, 43, ExchangeHolder.Kind.MERGE, MedalType.TEN);
+        lotteryButtons(holder);
 
         inventory.setItem(CLOSE_SLOT, button(Material.BARRIER, 1, "&c閉じる", List.of()));
         holder.put(CLOSE_SLOT, new ExchangeHolder.Action(ExchangeHolder.Kind.CLOSE, null, null));
+    }
+
+    private void lotteryButtons(ExchangeHolder holder) {
+        Inventory inventory = holder.getInventory();
+        Lottery lottery = plugin.lottery();
+        LotteryConfig config = lottery.config();
+        List<String> info = new ArrayList<>(List.of(
+                "&71枚: &f" + config.ticketPrice() + "スパメダル",
+                "&7賞金プール: &f" + lottery.pool() + "スパメダル",
+                "&7今回の販売: &f" + lottery.sold() + "枚",
+                "&7抽選: &f" + config.formatTime(lottery.nextDraw()),
+                ""));
+        for (LotteryConfig.Prize prize : config.prizes()) {
+            info.add("&6" + prize.name() + " &7" + prize.winners() + "本: プールの" + LotteryConfig.percent(prize.share())
+                    + (prize.winners() > 1 ? "を山分け" : ""));
+        }
+        info.add("");
+        info.add("&7売上の" + LotteryConfig.percent(config.poolRate()) + "が賞金プールに入り、残りは消えます。");
+        info.add("&7当選金は" + config.claimDraws() + "回あとの抽選までに換金してください。");
+        inventory.setItem(LOTTERY_INFO_SLOT, button(Material.PAPER, 1,
+                "&eスパくじ 第" + lottery.round() + "回", info));
+
+        for (int index = 0; index < LOTTERY_COUNTS.length; index++) {
+            int count = LOTTERY_COUNTS[index];
+            int slot = LOTTERY_INFO_SLOT + 1 + index;
+            inventory.setItem(slot, button(Material.YELLOW_CONCRETE, count, "&eくじを" + count + "枚買う", List.of(
+                    "&7支払う: &f" + (long) config.ticketPrice() * count + "スパメダル",
+                    "&7足りない額面は、大きいメダルから崩しておつりを渡します")));
+            holder.put(slot, new ExchangeHolder.Action(ExchangeHolder.Kind.LOTTERY_BUY, null, count));
+        }
+        inventory.setItem(LOTTERY_CLAIM_SLOT, button(Material.GOLD_BLOCK, 1, "&6当たりを確かめる", List.of(
+                "&7抽選済みの券をすべて回収し、",
+                "&7当たりのぶんをスパメダルで受け取ります。",
+                "&7抽選前の券はそのまま残ります。")));
+        holder.put(LOTTERY_CLAIM_SLOT, new ExchangeHolder.Action(ExchangeHolder.Kind.LOTTERY_CLAIM, null, null));
     }
 
     private void exchangeButton(ExchangeHolder holder, int slot, ExchangeHolder.Kind kind, MedalType type) {

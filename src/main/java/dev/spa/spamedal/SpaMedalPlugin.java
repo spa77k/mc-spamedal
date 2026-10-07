@@ -3,12 +3,13 @@ package dev.spa.spamedal;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
-/** スパコインと交換できる物理通貨「スパメダル」と、その両替所。 */
+/** スパコインと交換できる物理通貨「スパメダル」と、その両替所。両替所ではスパくじも売る。 */
 public final class SpaMedalPlugin extends JavaPlugin {
 
     private MedalItems medalItems;
     private MedalLedger ledger;
     private MedalExchange exchange;
+    private Lottery lottery;
     private EconomyService economy;
     private ExchangeGui gui;
     private MedalNpc npc;
@@ -25,15 +26,19 @@ public final class SpaMedalPlugin extends JavaPlugin {
         this.medalItems = new MedalItems(this);
         this.ledger = new MedalLedger(this);
         this.exchange = new MedalExchange(medalItems, ledger, MedalConfig.load(this));
+        LotteryTickets tickets = new LotteryTickets(this);
+        this.lottery = new Lottery(this, medalItems, tickets, exchange, ledger, LotteryConfig.load(this));
         this.gui = new ExchangeGui(this);
         this.npc = new MedalNpc(this);
 
         getServer().getPluginManager().registerEvents(new ExchangeListener(this), this);
-        getServer().getPluginManager().registerEvents(new MedalGuardListener(medalItems), this);
+        getServer().getPluginManager().registerEvents(new MedalGuardListener(medalItems, tickets), this);
         getServer().getPluginManager().registerEvents(npc, this);
+        // 抽選日時を過ぎたかを1分ごとに見る。停止中に日時を過ぎていたら、起動して最初の確認で抽選する。
+        getServer().getScheduler().runTaskTimer(this, lottery::tick, 20L * 10, 20L * 60);
 
         MedalCommand command = new MedalCommand(this);
-        for (String name : new String[]{"medal", "medalnpc"}) {
+        for (String name : new String[]{"medal", "medalnpc", "lottery"}) {
             PluginCommand registered = getCommand(name);
             if (registered == null) {
                 getLogger().warning("コマンド " + name + " が plugin.yml にありません。");
@@ -47,6 +52,11 @@ public final class SpaMedalPlugin extends JavaPlugin {
 
     void reloadMedalConfig() {
         exchange.setConfig(MedalConfig.load(this));
+        lottery.setConfig(LotteryConfig.load(this));
+    }
+
+    Lottery lottery() {
+        return lottery;
     }
 
     MedalItems medalItems() {

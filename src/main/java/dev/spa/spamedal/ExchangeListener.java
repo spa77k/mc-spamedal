@@ -47,6 +47,9 @@ final class ExchangeListener implements Listener {
                     action.type(), action.count());
             case SPLIT -> exchange.split(player.getInventory(), player.getUniqueId(), player.getName(), action.type());
             case MERGE -> exchange.merge(player.getInventory(), player.getUniqueId(), player.getName(), action.type());
+            case LOTTERY_BUY -> plugin.lottery().buy(player.getInventory(), player.getUniqueId(), player.getName(),
+                    action.count());
+            case LOTTERY_CLAIM -> plugin.lottery().claim(player.getInventory(), player.getUniqueId(), player.getName());
             case CLOSE -> throw new IllegalStateException();
         };
         player.sendMessage(Text.prefixed(outcome.message()));

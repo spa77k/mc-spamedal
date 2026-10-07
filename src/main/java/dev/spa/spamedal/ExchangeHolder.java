@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 /** 両替画面。開いている画面が両替所かどうかを、この型で見分ける。枠ごとに押したときの操作を持つ。 */
 final class ExchangeHolder implements InventoryHolder {
 
-    enum Kind { BUY, REDEEM, SPLIT, MERGE, CLOSE }
+    enum Kind { BUY, REDEEM, SPLIT, MERGE, LOTTERY_BUY, LOTTERY_CLAIM, CLOSE }
 
     /** count が null の REDEEM は「全部戻す」。 */
     record Action(Kind kind, MedalType type, Integer count) {

@@ -9,7 +9,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-/** /medal（発行状況・再読み込み）と /medalnpc（両替所の設置）。 */
+/** /medal（発行状況・再読み込み）、/medalnpc（両替所の設置）、/lottery（スパくじの状況・手動抽選）。 */
 final class MedalCommand implements CommandExecutor, TabCompleter {
 
     /** ロビーの案内係・表彰台と同じく、ロビーを編集できる権限でも設置できる。 */
@@ -29,8 +29,33 @@ final class MedalCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(Text.prefixed("&cこのコマンドを使う権限がありません。"));
             return true;
         }
+        if (command.getName().equals("lottery")) {
+            return lottery(sender, args.length == 0 ? "status" : args[0]);
+        }
         String sub = args.length == 0 ? (npc ? "status" : "stats") : args[0];
         return npc ? npc(sender, sub) : medal(sender, sub);
+    }
+
+    private boolean lottery(CommandSender sender, String sub) {
+        Lottery lottery = plugin.lottery();
+        switch (sub) {
+            case "status" -> {
+                LotteryConfig config = lottery.config();
+                sender.sendMessage(Text.lottery("&e第" + lottery.round() + "回 &7販売 &f" + lottery.sold() + "枚 &7賞金プール &f"
+                        + lottery.pool() + "スパメダル"));
+                sender.sendMessage(Text.of("&7次の抽選: &f" + config.formatTime(lottery.nextDraw())));
+                sender.sendMessage(Text.of("&7未換金の当選金を含めた払い戻し待ち: &f" + lottery.liabilities() + "スパメダル"));
+            }
+            case "draw" -> {
+                List<String> lines = lottery.draw();
+                // 抽選できたときは全体に知らせているので、延ばしたときだけ実行した人に返す。
+                if (lines.size() == 1) {
+                    sender.sendMessage(Text.lottery(lines.get(0)));
+                }
+            }
+            default -> sender.sendMessage(Text.lottery("&7使い方: /lottery <status|draw>"));
+        }
+        return true;
     }
 
     private boolean medal(CommandSender sender, String sub) {
@@ -44,6 +69,10 @@ final class MedalCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage(Text.of("&7回収（累計）: &f" + ledger.redeemed() + "枚"));
                 sender.sendMessage(Text.of("&7出回っている枚数: &f" + outstanding + "枚 &7（全部戻ると "
                         + config.formatMoney(outstanding * config.redeemPrice(MedalType.ONE, 1)) + " の支払い）"));
+                sender.sendMessage(Text.of("&7スパくじの売上（累計）: &f" + ledger.lotteryIn() + "枚 &7当選金（累計）: &f"
+                        + ledger.lotteryOut() + "枚 &7払い戻し待ち: &f" + plugin.lottery().liabilities() + "枚"));
+                sender.sendMessage(Text.of("&7スパくじで消えた量（累計）: &f" + ledger.lotteryBurned() + "枚 &7（スパコインに戻らなくなった額 "
+                        + config.formatMoney(ledger.lotteryBurned() * config.redeemPrice(MedalType.ONE, 1)) + "）"));
                 if (outstanding < 0) {
                     sender.sendMessage(Text.of("&c回収が発行を上回っています。増殖の疑いがあります。medals.log を確認してください。"));
                 }
@@ -91,8 +120,11 @@ final class MedalCommand implements CommandExecutor, TabCompleter {
         if (args.length != 1) {
             return List.of();
         }
-        List<String> options = command.getName().equals("medalnpc")
-                ? List.of("here", "remove", "status") : List.of("stats", "reload");
+        List<String> options = switch (command.getName()) {
+            case "medalnpc" -> List.of("here", "remove", "status");
+            case "lottery" -> List.of("status", "draw");
+            default -> List.of("stats", "reload");
+        };
         return options.stream().filter(option -> option.startsWith(args[0])).toList();
     }
 }

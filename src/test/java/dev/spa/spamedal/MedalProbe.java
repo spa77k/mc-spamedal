@@ -227,5 +227,110 @@ public final class MedalProbe extends JavaPlugin {
         check(count == 1, "置き直しても1体だけ");
         check((boolean) call(npc, "remove"), "村人を取り除ける");
         check(Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "medal stats"), "/medal stats を実行できる");
+
+        probeLottery(items, ledger, id);
+    }
+
+    /** 持ち物欄のメダルの合計（1スパメダル換算）。 */
+    private int medalValue(Object items, Inventory inventory) throws Exception {
+        int total = 0;
+        for (ItemStack stack : inventory.getStorageContents()) {
+            Object type = call(items, "typeOf", stack);
+            if (type != null) {
+                total += (int) call(type, "value") * stack.getAmount();
+            }
+        }
+        return total;
+    }
+
+    private int ticketCount(Object tickets, Inventory inventory) throws Exception {
+        int total = 0;
+        for (ItemStack stack : inventory.getStorageContents()) {
+            if (call(tickets, "read", stack) != null) {
+                total += stack.getAmount();
+            }
+        }
+        return total;
+    }
+
+    private void probeLottery(Object items, Object ledger, UUID id) throws Exception {
+        Object lottery = call(medal, "lottery");
+        java.lang.reflect.Constructor<?> ticketsConstructor = Class.forName("dev.spa.spamedal.LotteryTickets", true, loader)
+                .getDeclaredConstructor(org.bukkit.plugin.Plugin.class);
+        ticketsConstructor.setAccessible(true);
+        Object tickets = ticketsConstructor.newInstance(medal);
+        check((int) call(lottery, "round") == 1 && (long) call(lottery, "pool") == 0, "スパくじは第1回・プール0から");
+        long burned0 = (long) call(ledger, "lotteryBurned");
+        long outstanding0 = (long) call(ledger, "outstanding");
+
+        // おつり
+        Inventory inventory = Bukkit.createInventory(null, 36);
+        inventory.addItem((ItemStack) call(items, "create", type("HUNDRED"), 2));
+        check(ok(call(lottery, "buy", inventory, id, "Probe", 1)), "100スパメダルでくじを1枚買える");
+        check(medalValue(items, inventory) == 190 && ticketCount(tickets, inventory) == 1, "おつり90スパメダルと券1枚");
+        check(ok(call(lottery, "buy", inventory, id, "Probe", 13)), "くじを13枚買える");
+        check(medalValue(items, inventory) == 60 && ticketCount(tickets, inventory) == 14, "残り60スパメダルと券14枚");
+        check(!ok(call(lottery, "buy", inventory, id, "Probe", 10)), "足りなければ買えない");
+        check(medalValue(items, inventory) == 60 && ticketCount(tickets, inventory) == 14, "買えなかったときは何も動かない");
+        check((int) call(lottery, "sold") == 14 && (long) call(lottery, "pool") == 70, "売上140のうち70がプールに入る");
+        check((long) call(ledger, "lotteryBurned") - burned0 == 70, "残りの70は消える");
+        check((long) call(ledger, "outstanding") - outstanding0 == -140, "券の代金は出回りから抜ける");
+
+        // 偽物の券
+        ItemStack real = null;
+        for (ItemStack stack : inventory.getStorageContents()) {
+            if (call(tickets, "read", stack) != null) {
+                real = stack;
+                break;
+            }
+        }
+        ItemStack fake = new ItemStack(Material.PAPER);
+        ItemMeta fakeMeta = fake.getItemMeta();
+        fakeMeta.displayName(real.getItemMeta().displayName());
+        fakeMeta.lore(real.getItemMeta().lore());
+        fake.setItemMeta(fakeMeta);
+        check(call(tickets, "read", fake) == null, "名前とロアだけ同じ紙は券ではない");
+
+        // 抽選前の券は回収しない
+        check(!ok(call(lottery, "claim", inventory, id, "Probe")), "抽選前は換金できない");
+        check(ticketCount(tickets, inventory) == 14, "抽選前の券は残る");
+
+        // 抽選: 1等42、2等5×3、3等1×10で67を配り、端数3を持ち越す
+        Inventory copy = Bukkit.createInventory(null, 36);
+        for (ItemStack stack : inventory.getStorageContents()) {
+            if (call(tickets, "read", stack) != null) {
+                copy.addItem(stack.clone());
+            }
+        }
+        call(lottery, "draw");
+        check((int) call(lottery, "round") == 2 && (int) call(lottery, "sold") == 0, "抽選すると第2回になる");
+        check((long) call(lottery, "pool") == 3, "端数3スパメダルを持ち越す");
+        check(ok(call(lottery, "claim", inventory, id, "Probe")), "当たりを換金できる");
+        check(medalValue(items, inventory) == 127 && ticketCount(tickets, inventory) == 0, "当選金67を受け取り、券は回収される");
+        check(ok(call(lottery, "claim", copy, id, "Probe")), "写した券も回収される");
+        check(medalValue(items, copy) == 0 && ticketCount(tickets, copy) == 0, "写した券では二重に受け取れない");
+        check((long) call(ledger, "outstanding") - outstanding0 == -73, "当選金は出回りに戻る");
+
+        // 券が売れていない回は抽選しない
+        call(lottery, "draw");
+        check((int) call(lottery, "round") == 2 && (long) call(lottery, "pool") == 3, "0枚の回は抽選せず持ち越す");
+
+        // 換金期限: 第2回の当選金4は、第6回の抽選で消える
+        long burned1 = (long) call(ledger, "lotteryBurned");
+        Inventory late = Bukkit.createInventory(null, 36);
+        late.addItem((ItemStack) call(items, "create", type("TEN"), 5));
+        Inventory others = Bukkit.createInventory(null, 36);
+        others.addItem((ItemStack) call(items, "create", type("TEN"), 5));
+        check(ok(call(lottery, "buy", late, id, "Probe", 1)), "第2回の券を買える");
+        call(lottery, "draw");
+        for (int round = 3; round <= 6; round++) {
+            check(ok(call(lottery, "buy", others, id, "Probe", 1)), "第" + round + "回の券を買える");
+            call(lottery, "draw");
+        }
+        check((long) call(ledger, "lotteryBurned") - burned1 == 25 + 4, "期限切れの当選金4が消える");
+        int before = medalValue(items, late);
+        check(ok(call(lottery, "claim", late, id, "Probe")), "期限切れの券も回収される");
+        check(medalValue(items, late) == before && ticketCount(tickets, late) == 0, "期限切れの券には払わない");
+        check(Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lottery status"), "/lottery status を実行できる");
     }
 }

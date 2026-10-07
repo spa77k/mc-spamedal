@@ -3,7 +3,7 @@ version: '${project.version}'
 main: dev.spa.spamedal.SpaMedalPlugin
 api-version: "1.21"
 author: spa
-description: スパコインと交換できる物理通貨「スパメダル」と両替所
+description: スパコインと交換できる物理通貨「スパメダル」と両替所、スパくじ
 depend: [Vault]
 
 commands:
@@ -13,8 +13,11 @@ commands:
   medalnpc:
     description: 両替所の村人を置く・取り除く
     usage: /medalnpc <here|remove|status>
+  lottery:
+    description: スパくじの状況と手動抽選
+    usage: /lottery <status|draw>
 
 permissions:
   spamedal.admin:
-    description: 発行状況の確認、設定の再読み込み、両替所の設置
+    description: 発行状況の確認、設定の再読み込み、両替所の設置、スパくじの手動抽選
     default: op

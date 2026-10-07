@@ -24,4 +24,8 @@ final class Text {
     static Component prefixed(String legacy) {
         return LEGACY.deserialize("&8[&6両替所&8] &r" + legacy);
     }
+
+    static Component lottery(String legacy) {
+        return LEGACY.deserialize("&8[&eスパくじ&8] &r" + legacy);
+    }
 }

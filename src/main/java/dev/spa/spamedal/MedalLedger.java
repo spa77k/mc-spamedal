@@ -21,6 +21,9 @@ import org.bukkit.plugin.java.JavaPlugin;
  * 1件ずつの取引は medals.log に1行1件のJSON（JSON Lines）で追記する。
  * 累計は stats.yml に1スパメダル換算の枚数で持ち、「発行 − 回収 = 出回っている枚数」を出す。
  * 出回っている枚数より多くのメダルが戻ってきたら、どこかで増殖している合図になる。
+ *
+ * スパくじの券に払ったメダルは出回りから抜け、当選金として払ったメダルは出回りに戻る。
+ * 払った額のうち、賞金プールにも当選金にもならなかったぶんは「消えた量」として数える。
  */
 final class MedalLedger {
 
@@ -32,6 +35,9 @@ final class MedalLedger {
     private final File statsFile;
     private long issued;
     private long redeemed;
+    private long lotteryIn;
+    private long lotteryOut;
+    private long lotteryBurned;
 
     MedalLedger(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -46,6 +52,9 @@ final class MedalLedger {
         YamlConfiguration stats = YamlConfiguration.loadConfiguration(statsFile);
         this.issued = stats.getLong("issued", 0);
         this.redeemed = stats.getLong("redeemed", 0);
+        this.lotteryIn = stats.getLong("lottery-in", 0);
+        this.lotteryOut = stats.getLong("lottery-out", 0);
+        this.lotteryBurned = stats.getLong("lottery-burned", 0);
     }
 
     long issued() {
@@ -58,7 +67,22 @@ final class MedalLedger {
 
     /** 出回っている枚数（1スパメダル換算）。 */
     long outstanding() {
-        return issued - redeemed;
+        return issued - redeemed - lotteryIn + lotteryOut;
+    }
+
+    /** 券の代金として受け取った枚数（累計）。 */
+    long lotteryIn() {
+        return lotteryIn;
+    }
+
+    /** 当選金として払った枚数（累計）。 */
+    long lotteryOut() {
+        return lotteryOut;
+    }
+
+    /** 宝くじで消えた枚数（累計）。 */
+    long lotteryBurned() {
+        return lotteryBurned;
     }
 
     void recordBuy(UUID uuid, String name, MedalType type, int count, double money) {
@@ -86,10 +110,68 @@ final class MedalLedger {
         log("merge", uuid, name, to, count, 0);
     }
 
+    /** cost 枚で count 枚の券を買い、そのうち burned 枚が消えた。 */
+    void recordLotteryBuy(UUID uuid, String name, int round, int count, long cost, long burned) {
+        lotteryIn += cost;
+        lotteryBurned += burned;
+        saveStats();
+        Map<String, Object> fields = lotteryFields("lottery-buy", uuid, name, round);
+        fields.put("count", count);
+        fields.put("cost", cost);
+        fields.put("burned", burned);
+        write(fields);
+    }
+
+    void recordLotteryPayout(UUID uuid, String name, int round, int tickets, long amount) {
+        lotteryOut += amount;
+        saveStats();
+        Map<String, Object> fields = lotteryFields("lottery-payout", uuid, name, round);
+        fields.put("count", tickets);
+        fields.put("prize", amount);
+        write(fields);
+        if (outstanding() < 0) {
+            plugin.getLogger().warning("出回っている枚数がマイナスになりました。当選金の二重払いの疑いがあります: "
+                    + name + "（第" + round + "回）");
+        }
+    }
+
+    void recordLotteryDraw(int round, int sold, long pool, long awarded, long carried) {
+        Map<String, Object> fields = lotteryFields("lottery-draw", null, null, round);
+        fields.put("count", sold);
+        fields.put("pool", pool);
+        fields.put("prize", awarded);
+        fields.put("carried", carried);
+        write(fields);
+    }
+
+    /** 換金されないまま期限が過ぎた当選金を消す。 */
+    void recordLotteryExpire(int round, long amount) {
+        lotteryBurned += amount;
+        saveStats();
+        Map<String, Object> fields = lotteryFields("lottery-expire", null, null, round);
+        fields.put("burned", amount);
+        write(fields);
+    }
+
+    private Map<String, Object> lotteryFields(String action, UUID uuid, String name, int round) {
+        Map<String, Object> fields = new LinkedHashMap<>();
+        fields.put("at", ZonedDateTime.now(ZONE).format(TIMESTAMP));
+        fields.put("action", action);
+        if (uuid != null) {
+            fields.put("player", name);
+            fields.put("uuid", uuid.toString());
+        }
+        fields.put("round", round);
+        return fields;
+    }
+
     private void saveStats() {
         YamlConfiguration stats = new YamlConfiguration();
         stats.set("issued", issued);
         stats.set("redeemed", redeemed);
+        stats.set("lottery-in", lotteryIn);
+        stats.set("lottery-out", lotteryOut);
+        stats.set("lottery-burned", lotteryBurned);
         try {
             stats.save(statsFile);
         } catch (IOException exception) {
@@ -108,6 +190,10 @@ final class MedalLedger {
         fields.put("money", money);
         fields.put("issued", issued);
         fields.put("redeemed", redeemed);
+        write(fields);
+    }
+
+    private void write(Map<String, Object> fields) {
         // 非同期にすると、停止の直前の取引がスケジューラごと捨てられて記録から漏れる。
         // 1行の追記なので、その場で書く。
         try {

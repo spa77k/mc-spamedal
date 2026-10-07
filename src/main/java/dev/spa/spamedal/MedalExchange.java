@@ -128,7 +128,7 @@ final class MedalExchange {
         return new Outcome(true, "&a" + smaller.displayName() + " &a10枚を " + type.displayName() + " &a1枚に束ねました。");
     }
 
-    private static ItemStack[] copy(ItemStack[] contents) {
+    static ItemStack[] copy(ItemStack[] contents) {
         ItemStack[] copy = new ItemStack[contents.length];
         for (int index = 0; index < contents.length; index++) {
             copy[index] = contents[index] == null ? null : contents[index].clone();
@@ -137,7 +137,7 @@ final class MedalExchange {
     }
 
     /** 同じメダルの山へ先に足し、残りを空き枠へ置く。入りきらなかった枚数を返す。 */
-    private static int add(ItemStack[] contents, ItemStack template, int amount) {
+    static int add(ItemStack[] contents, ItemStack template, int amount) {
         int max = template.getMaxStackSize();
         for (int index = 0; index < contents.length && amount > 0; index++) {
             ItemStack stack = contents[index];
@@ -159,7 +159,7 @@ final class MedalExchange {
         return amount;
     }
 
-    private void remove(ItemStack[] contents, MedalType type, int amount) {
+    void remove(ItemStack[] contents, MedalType type, int amount) {
         for (int index = 0; index < contents.length && amount > 0; index++) {
             ItemStack stack = contents[index];
             if (items.typeOf(stack) != type) {
