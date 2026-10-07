@@ -5,7 +5,7 @@ PaperMC サーバー向けの、スパコインと交換できる物理通貨「
 
 ## 動作環境
 
-- Minecraft サーバー: PaperMC 26.2
+- Minecraft サーバー: PaperMC 26.2・26.3
 - 対象 API: Paper API `1.21.4-R0.1-SNAPSHOT`
 - Java: 21
 - ビルドツール: Maven
