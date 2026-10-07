@@ -269,10 +269,10 @@ public final class MedalProbe extends JavaPlugin {
         check(ok(call(lottery, "buy", inventory, id, "Probe", 1)), "100スパメダルでくじを1枚買える");
         check(medalValue(items, inventory) == 190 && ticketCount(tickets, inventory) == 1, "おつり90スパメダルと券1枚");
         check(ok(call(lottery, "buy", inventory, id, "Probe", 13)), "くじを13枚買える");
-        check(medalValue(items, inventory) == 60 && ticketCount(tickets, inventory) == 14, "残り60スパメダルと券14枚");
+        check(medalValue(items, inventory) == 60 && ticketCount(tickets, inventory) == 15, "残り60スパメダルと、おまけ1枚込みの券15枚");
         check(!ok(call(lottery, "buy", inventory, id, "Probe", 10)), "足りなければ買えない");
-        check(medalValue(items, inventory) == 60 && ticketCount(tickets, inventory) == 14, "買えなかったときは何も動かない");
-        check((int) call(lottery, "sold") == 14 && (long) call(lottery, "pool") == 70, "売上140のうち70がプールに入る");
+        check(medalValue(items, inventory) == 60 && ticketCount(tickets, inventory) == 15, "買えなかったときは何も動かない");
+        check((int) call(lottery, "sold") == 15 && (long) call(lottery, "pool") == 70, "売上140のうち70がプールに入り、おまけはプールを増やさない");
         check((long) call(ledger, "lotteryBurned") - burned0 == 70, "残りの70は消える");
         check((long) call(ledger, "outstanding") - outstanding0 == -140, "券の代金は出回りから抜ける");
 
@@ -293,7 +293,7 @@ public final class MedalProbe extends JavaPlugin {
 
         // 抽選前の券は回収しない
         check(!ok(call(lottery, "claim", inventory, id, "Probe")), "抽選前は換金できない");
-        check(ticketCount(tickets, inventory) == 14, "抽選前の券は残る");
+        check(ticketCount(tickets, inventory) == 15, "抽選前の券は残る");
 
         // 抽選: 1等42、2等5×3、3等1×10で67を配り、端数3を持ち越す
         Inventory copy = Bukkit.createInventory(null, 36);

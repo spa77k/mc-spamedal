@@ -130,9 +130,14 @@ final class ExchangeGui {
         for (int index = 0; index < LOTTERY_COUNTS.length; index++) {
             int count = LOTTERY_COUNTS[index];
             int slot = LOTTERY_INFO_SLOT + 1 + index;
-            inventory.setItem(slot, button(Material.YELLOW_CONCRETE, count, "&eくじを" + count + "枚買う", List.of(
-                    "&7支払う: &f" + (long) config.ticketPrice() * count + "スパメダル",
-                    "&7足りない額面は、大きいメダルから崩しておつりを渡します")));
+            int bonus = Lottery.bonus(count);
+            List<String> lore = new ArrayList<>();
+            lore.add("&7支払う: &f" + (long) config.ticketPrice() * count + "スパメダル");
+            if (bonus > 0) {
+                lore.add("&6おまけ" + bonus + "枚付きで、券を" + (count + bonus) + "枚もらえます");
+            }
+            lore.add("&7足りない額面は、大きいメダルから崩しておつりを渡します");
+            inventory.setItem(slot, button(Material.YELLOW_CONCRETE, count, "&eくじを" + count + "枚買う", lore));
             holder.put(slot, new ExchangeHolder.Action(ExchangeHolder.Kind.LOTTERY_BUY, null, count));
         }
         inventory.setItem(LOTTERY_CLAIM_SLOT, button(Material.GOLD_BLOCK, 1, "&6当たりを確かめる", List.of(

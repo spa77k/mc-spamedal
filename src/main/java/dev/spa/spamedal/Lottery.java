@@ -126,6 +126,11 @@ final class Lottery {
         }
     }
 
+    /** 10枚買うごとに1枚おまけを付ける。代金と賞金プールは買った枚数ぶんだけ。 */
+    static int bonus(int count) {
+        return count / 10;
+    }
+
     MedalExchange.Outcome buy(Inventory inventory, UUID uuid, String name, int count) {
         if (count <= 0) {
             return MedalExchange.Outcome.fail("&c枚数が正しくありません。");
@@ -167,23 +172,25 @@ final class Lottery {
             return MedalExchange.Outcome.fail("&cスパメダルで支払えませんでした。");
         }
 
+        int issued = count + bonus(count);
         String drawTime = config.formatTime(nextDraw);
-        for (int index = 1; index <= count; index++) {
+        for (int index = 1; index <= issued; index++) {
             if (MedalExchange.add(contents, tickets.create(round, sold + index, drawTime), 1) > 0) {
-                return MedalExchange.Outcome.fail("&c持ち物がいっぱいです。券" + count + "枚ぶんの空きを作ってからもう一度どうぞ。");
+                return MedalExchange.Outcome.fail("&c持ち物がいっぱいです。券" + issued + "枚ぶんの空きを作ってからもう一度どうぞ。");
             }
         }
 
         inventory.setStorageContents(contents);
         int first = sold + 1;
-        sold += count;
+        sold += issued;
         long toPool = config.poolPerTicket() * count;
         pool += toPool;
         save();
-        ledger.recordLotteryBuy(uuid, name, round, count, cost, cost - toPool);
-        String numbers = count == 1 ? LotteryTickets.label(first)
+        ledger.recordLotteryBuy(uuid, name, round, issued, cost, cost - toPool);
+        String numbers = issued == 1 ? LotteryTickets.label(first)
                 : LotteryTickets.label(first) + "〜" + LotteryTickets.label(sold);
-        return new MedalExchange.Outcome(true, "&aスパくじ第" + round + "回を" + count + "枚買いました（" + numbers
+        return new MedalExchange.Outcome(true, "&aスパくじ第" + round + "回を" + issued + "枚買いました（"
+                + (issued > count ? "おまけ" + (issued - count) + "枚込み、" : "") + numbers
                 + "）。&7（-" + cost + "スパメダル）");
     }
 
